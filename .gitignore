@@ -1,0 +1,24 @@
+﻿# Virtual env
+venv/
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Data / DB / uploads
+data/
+*.db
+uploads/
+logs/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# models and trained weights
+*.pt
+*.bin
