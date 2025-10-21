@@ -1,16 +1,22 @@
-﻿from fastapi import APIRouter
-from backend.db import crud
+﻿from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from backend.db import db_models, database
+from backend.api.schemas.note_schema import NoteCreate, NoteOut
 
-router = APIRouter()
+router = APIRouter(prefix="/notes", tags=["Notes"])
 
-@router.get("/")
-def list_notes():
-    """Return list of notes (id, title, summary)."""
-    return crud.list_notes()
+@router.post("/create", response_model=NoteOut)
+def create_note(note: NoteCreate, db: Session = Depends(database.get_db)):
+    new_note = db_models.Note(**note.dict())
+    db.add(new_note)
+    db.commit()
+    db.refresh(new_note)
+    return new_note
 
-@router.get("/{note_id}")
-def get_note(note_id: int):
-    note = crud.get_note(note_id)
-    if not note:
-        return {"error": "not found"}
+
+@router.get("/read", response_model=NoteOut)
+def read_note(note_id: int, db: Session = Depends(database.get_db)):
+    note = db.query(db_models.Note).filter(db_models.Note.id == note_id).first()
+    if note is None:
+        raise HTTPException(status_code=404, detail="Note not found")
     return note
