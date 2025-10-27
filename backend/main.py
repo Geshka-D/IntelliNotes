@@ -1,18 +1,19 @@
 ﻿from fastapi import FastAPI
 from backend.api.routes import lecture_routes, note_routes, user_routes
-from backend.db.database import init_db
+from backend.db import db_models, database
 import uvicorn
 app = FastAPI(title="LectureNotesAI Backend")
 
 # include routers
-app.include_router(lecture_routes.router, prefix="/lectures", tags=["Lectures"])
-app.include_router(note_routes.router, prefix="/notes", tags=["Notes"])
-app.include_router(user_routes.router, prefix="/users", tags=["Users"])
+app.include_router(lecture_routes.router)
+app.include_router(note_routes.router)
+app.include_router(user_routes.router)
 
 @app.on_event("startup")
 def on_startup():
     # initialize database tables
-    init_db()
+    db_models.Base.metadata.create_all(bind=database.engine)
+
 
 @app.get("/")
 def root():
