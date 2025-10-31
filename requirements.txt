@@ -8,3 +8,12 @@ python-docx
 reportlab
 pytest
 sqlalchemy
+transformers
+torch
+yake
+keybert
+sentence-transformers
+python-dotenv
+requests
+openai
+dotenv
