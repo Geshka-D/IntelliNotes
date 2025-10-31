@@ -1,135 +1,134 @@
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
 import { Input } from "./ui/input";
-import { Search, Calendar, FileText, Trash2, Eye } from "lucide-react";
-
-export interface Lecture {
-  id: string;
-  title: string;
-  date: string;
-  duration?: string;
-  status: 'processing' | 'ready' | 'recorded';
-  tags?: string[];
-  hasTranscript: boolean;
-}
+import { Calendar, FileText, Loader2, Trash2 } from "lucide-react";
+import type { NoteListItem } from "../types";
 
 interface LectureLibraryProps {
-  lectures: Lecture[];
-  onSelectLecture: (id: string) => void;
-  onDeleteLecture: (id: string) => void;
+  notes: NoteListItem[];
+  selectedId: number | null;
+  onSelect: (id: number) => void;
+  onDelete: (id: number) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  isLoading: boolean;
 }
 
-export function LectureLibrary({ 
-  lectures, 
-  onSelectLecture, 
-  onDeleteLecture,
+const STATUS_LABELS: Record<string, string> = {
+  ready: "Ready",
+  recorded: "Recorded",
+  processing: "Processing",
+};
+
+const STATUS_CLASSES: Record<string, string> = {
+  ready: "bg-green-500",
+  recorded: "bg-blue-500",
+  processing: "bg-yellow-500",
+};
+
+export function LectureLibrary({
+  notes,
+  selectedId,
+  onSelect,
+  onDelete,
   searchQuery,
-  onSearchChange 
+  onSearchChange,
+  isLoading,
 }: LectureLibraryProps) {
-  const getStatusColor = (status: Lecture['status']) => {
-    switch(status) {
-      case 'processing': return 'bg-yellow-500';
-      case 'ready': return 'bg-green-500';
-      case 'recorded': return 'bg-blue-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getStatusText = (status: Lecture['status']) => {
-    switch(status) {
-      case 'processing': return 'Обработка';
-      case 'ready': return 'Готово';
-      case 'recorded': return 'Записано';
-      default: return '';
-    }
-  };
-
-  const filteredLectures = lectures.filter(lecture => 
-    lecture.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <Input
             type="text"
-            placeholder="Поиск лекций..."
+            placeholder="Search notes..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
+            onChange={(event) => onSearchChange(event.target.value)}
+            className="pl-3"
           />
         </div>
       </div>
 
-      <div className="grid gap-4">
-        {filteredLectures.length === 0 ? (
-          <Card className="p-8 text-center">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">Лекции не найдены</p>
-            <p className="text-gray-400 mt-1">Начните запись или загрузите файл</p>
-          </Card>
-        ) : (
-          filteredLectures.map((lecture) => (
-            <Card key={lecture.id} className="p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="truncate">{lecture.title}</h3>
-                    <Badge variant="secondary" className={getStatusColor(status)}>
-                      {getStatusText(lecture.status)}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-gray-500 mb-2">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{lecture.date}</span>
+      {isLoading ? (
+        <Card className="p-8 text-center">
+          <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin text-gray-400" />
+          <p className="text-gray-500">Loading notes…</p>
+        </Card>
+      ) : notes.length === 0 ? (
+        <Card className="p-8 text-center">
+          <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <p className="text-gray-500">No notes captured yet.</p>
+          <p className="text-gray-400 mt-1">
+            Start a recording or upload a file to create one.
+          </p>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {notes.map((note) => {
+            const statusLabel = STATUS_LABELS[note.status] ?? note.status;
+            const statusClass = STATUS_CLASSES[note.status] ?? "bg-gray-500";
+
+            return (
+              <Card
+                key={note.id}
+                className={`p-4 transition-shadow hover:shadow-md ${
+                  selectedId === note.id ? "border-blue-500 shadow-md" : ""
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate font-semibold">{note.title}</h3>
+                      <Badge className={statusClass}>{statusLabel}</Badge>
                     </div>
-                    {lecture.duration && (
-                      <span>{lecture.duration}</span>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {note.created_at
+                            ? new Date(note.created_at).toLocaleString()
+                            : "—"}
+                        </span>
+                      </div>
+                      <span>{note.language?.toUpperCase() ?? "AUTO"}</span>
+                    </div>
+                    {note.summary && (
+                      <p className="text-gray-600 line-clamp-2">{note.summary}</p>
+                    )}
+                    {note.keywords.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {note.keywords.slice(0, 4).map((keyword) => (
+                          <Badge key={keyword} variant="outline">
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </div>
 
-                  {lecture.tags && lecture.tags.length > 0 && (
-                    <div className="flex gap-2 flex-wrap">
-                      {lecture.tags.map((tag, idx) => (
-                        <Badge key={idx} variant="outline">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  {lecture.hasTranscript && (
+                  <div className="flex flex-col gap-2">
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={() => onSelectLecture(lecture.id)}
+                      onClick={() => onSelect(note.id)}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Открыть
+                      View
                     </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDeleteLecture(lecture.id)}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(note.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

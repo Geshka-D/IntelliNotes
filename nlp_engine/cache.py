@@ -23,7 +23,7 @@ def cache_get(store_path: str, namespace: str, key: str, ttl_seconds: int) -> Op
             rec = ns.get(key)
             if not rec:
                 return None
-            if _now() - int(rec.get("ts", 0)) > ttl_seconds:
+            if ttl_seconds >= 0 and _now() - int(rec.get("ts", 0)) >= ttl_seconds:
                 return None
             return rec.get("val")
     except Exception:

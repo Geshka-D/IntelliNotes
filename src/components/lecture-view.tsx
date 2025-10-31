@@ -1,182 +1,156 @@
-import { useState } from "react";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Progress } from "./ui/progress";
-import { ArrowLeft, FileDown, Sparkles } from "lucide-react";
-
-interface TranscriptSegment {
-  timestamp: string;
-  text: string;
-  keywords?: string[];
-}
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { ArrowLeft, CheckCircle2, ListChecks, Sparkles } from "lucide-react";
+import type { NoteDetail } from "../types";
 
 interface LectureViewProps {
-  lecture: {
-    id: string;
-    title: string;
-    date: string;
-    hasTranscript: boolean;
-  };
+  note: NoteDetail;
   onBack: () => void;
+  isLoading: boolean;
 }
 
-export function LectureView({ lecture, onBack }: LectureViewProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generationProgress, setGenerationProgress] = useState(0);
-  const [transcript, setTranscript] = useState<TranscriptSegment[] | null>(
-    lecture.hasTranscript ? [
-      {
-        timestamp: "00:00",
-        text: "Добро пожаловать на сегодняшнюю лекцию по машинному обучению. Сегодня мы будем обсуждать нейронные сети и их применение в современных системах искусственного интеллекта.",
-        keywords: ["машинное обучение", "нейронные сети", "искусственный интеллект"]
-      },
-      {
-        timestamp: "00:45",
-        text: "Начнем с основ. Нейронная сеть - это вычислительная модель, вдохновленная биологическими нейронными сетями в человеческом мозге. Она состоит из слоев взаимосвязанных узлов, которые мы называем нейронами.",
-        keywords: ["нейронная сеть", "нейроны"]
-      },
-      {
-        timestamp: "01:30",
-        text: "Ключевыми компонентами нейронной сети являются входной слой, скрытые слои и выходной слой. Данные проходят через эти слои, преобразуясь на каждом этапе с помощью весовых коэффициентов и функций активации.",
-        keywords: ["входной слой", "скрытые слои", "выходной слой", "весовые коэффициенты"]
-      },
-      {
-        timestamp: "02:15",
-        text: "Процесс обучения нейронной сети основан на алгоритме обратного распространения ошибки. Мы подаем данные, получаем предсказание, вычисляем ошибку и корректируем веса для минимизации этой ошибки.",
-        keywords: ["обратное распространение", "обучение", "предсказание"]
-      },
-      {
-        timestamp: "03:00",
-        text: "Давайте рассмотрим практические применения. Нейронные сети используются в распознавании изображений, обработке естественного языка, автономных транспортных средствах и многих других областях.",
-        keywords: ["распознавание изображений", "обработка языка", "применения"]
-      }
-    ] : null
-  );
-
-  const handleGenerateTranscript = () => {
-    setIsGenerating(true);
-    setGenerationProgress(0);
-
-    const interval = setInterval(() => {
-      setGenerationProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsGenerating(false);
-          setTranscript([
-            {
-              timestamp: "00:00",
-              text: "Добро пожаловать на сегодняшнюю лекцию по машинному обучению. Сегодня мы будем обсуждать нейронные сети и их применение в современных системах искусственного интеллекта.",
-              keywords: ["машинное обучение", "нейронные сети", "искусственный интеллект"]
-            },
-            {
-              timestamp: "00:45",
-              text: "Начнем с основ. Нейронная сеть - это вычислительная модель, вдохновленная биологическими нейронными сетями в человеческом мозге. Она состоит из слоев взаимосвязанных узлов, которые мы называем нейронами.",
-              keywords: ["нейронная сеть", "нейроны"]
-            }
-          ]);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 300);
-  };
+export function LectureView({ note, onBack, isLoading }: LectureViewProps) {
+  const {
+    summary,
+    bullets,
+    decisions,
+    action_items,
+    open_questions,
+    keywords,
+    links,
+    content,
+    created_at,
+    language,
+    summarizer_provider,
+  } = note;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={onBack}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Назад к библиотеке
+        <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to list
         </Button>
-        
-        {transcript && (
-          <Button variant="outline">
-            <FileDown className="w-4 h-4 mr-2" />
-            Экспортировать
-          </Button>
+        <div className="text-sm text-gray-500">
+          <span>{created_at ? new Date(created_at).toLocaleString() : ""}</span>
+          {language && <span className="ml-2 uppercase">{language}</span>}
+        </div>
+      </div>
+
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-blue-600/10 rounded-full">
+            <Sparkles className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold">Summary</h2>
+            <p className="text-sm text-gray-500">
+              Provider: {summarizer_provider ?? "extractive"}
+            </p>
+          </div>
+        </div>
+        {isLoading ? (
+          <p className="text-gray-500">Loading note�</p>
+        ) : summary ? (
+          <p className="text-gray-700 leading-relaxed">{summary}</p>
+        ) : (
+          <p className="text-gray-400">Summary unavailable.</p>
+        )}
+      </Card>
+
+      {bullets.length > 0 && (
+        <Card className="p-6 space-y-3">
+          <h3 className="font-semibold">Key points</h3>
+          <ul className="list-disc ml-5 space-y-2 text-gray-700">
+            {bullets.map((point, idx) => (
+              <li key={idx}>{point}</li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {keywords.length > 0 && (
+        <Card className="p-6 space-y-3">
+          <h3 className="font-semibold">Keywords</h3>
+          <div className="flex flex-wrap gap-2">
+            {keywords.map((keyword) => (
+              <Badge key={keyword} variant="outline">
+                {keyword}
+              </Badge>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {decisions.length > 0 && (
+          <Card className="p-6 space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-green-600" /> Decisions
+            </h3>
+            <ul className="list-disc ml-5 space-y-2 text-gray-700">
+              {decisions.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          </Card>
+        )}
+
+        {action_items.length > 0 && (
+          <Card className="p-6 space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-blue-600" /> Action items
+            </h3>
+            <ul className="list-disc ml-5 space-y-2 text-gray-700">
+              {action_items.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          </Card>
         )}
       </div>
 
-      <Card className="p-6">
-        <div className="mb-6">
-          <h2 className="mb-2">{lecture.title}</h2>
-          <p className="text-gray-500">{lecture.date}</p>
-        </div>
+      {open_questions.length > 0 && (
+        <Card className="p-6 space-y-3">
+          <h3 className="font-semibold">Open questions</h3>
+          <ul className="list-disc ml-5 space-y-2 text-gray-700">
+            {open_questions.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
-        {!transcript && !isGenerating && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="mb-2">Конспект не сформирован</h3>
-            <p className="text-gray-500 mb-6">
-              Нажмите кнопку ниже, чтобы автоматически создать конспект лекции
-            </p>
-            <Button onClick={handleGenerateTranscript}>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Сформировать конспект
-            </Button>
+      {links.length > 0 && (
+        <Card className="p-6 space-y-3">
+          <h3 className="font-semibold">Suggested reading</h3>
+          <ul className="space-y-2 text-sm">
+            {links.map((link, idx) => (
+              <li key={idx}>
+                <a
+                  href={link.url ?? "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {link.title ?? link.term ?? link.url}
+                </a>
+                {link.summary && <p className="text-gray-500">{link.summary}</p>}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      <Card className="p-6 space-y-3">
+        <h3 className="font-semibold">Transcript</h3>
+        {content ? (
+          <div className="prose max-w-none whitespace-pre-wrap text-gray-800">
+            {content}
           </div>
-        )}
-
-        {isGenerating && (
-          <div className="py-12 space-y-4">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                <Sparkles className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="mb-2">Формирование конспекта</h3>
-              <p className="text-gray-500">Пожалуйста, подождите...</p>
-            </div>
-            
-            <div className="max-w-md mx-auto space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Прогресс:</span>
-                <span>{generationProgress}%</span>
-              </div>
-              <Progress value={generationProgress} />
-            </div>
-          </div>
-        )}
-
-        {transcript && !isGenerating && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-              <span className="text-green-800">Конспект готов</span>
-              <Badge variant="secondary" className="bg-green-600">
-                {transcript.length} сегментов
-              </Badge>
-            </div>
-
-            <div className="space-y-4">
-              {transcript.map((segment, idx) => (
-                <div key={idx} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">
-                      <Badge variant="outline" className="tabular-nums">
-                        {segment.timestamp}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <p className="mb-3">{segment.text}</p>
-                      
-                      {segment.keywords && segment.keywords.length > 0 && (
-                        <div className="flex gap-2 flex-wrap">
-                          {segment.keywords.map((keyword, kidx) => (
-                            <Badge key={kidx} className="bg-purple-100 text-purple-800 hover:bg-purple-200">
-                              {keyword}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        ) : (
+          <p className="text-gray-400">Transcript is not available for this note.</p>
         )}
       </Card>
     </div>

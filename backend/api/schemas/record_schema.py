@@ -15,6 +15,7 @@ class RecordingStatus(BaseModel):
     device_name: Optional[str] = None
     started_at: Optional[str] = None
     duration_seconds: Optional[float] = None
+    available: bool = True
 
 class DeviceInfo(BaseModel):
     name: str
