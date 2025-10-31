@@ -1,25 +1,23 @@
-﻿import sqlite3
-import os
+﻿from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from pathlib import Path
 
-DB_PATH = os.path.join("data", "lecture_notes.db")
-os.makedirs("data", exist_ok=True)
+# Получаем директорию, где находится database.py
+BASE_DIR = Path(__file__).resolve().parent
+DB_DIR = BASE_DIR / "data"
+DB_DIR.mkdir(exist_ok=True)
 
-def get_connection():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
+DATABASE_PATH = DB_DIR / "lecture_notes.db"
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
-def init_db():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS notes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT,
-        content TEXT,
-        summary TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-    conn.commit()
-    conn.close()
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
