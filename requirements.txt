@@ -7,3 +7,12 @@ requests
 python-docx
 reportlab
 pytest
+transformers
+torch
+yake
+keybert
+sentence-transformers
+python-dotenv
+requests
+openai
+dotenv
