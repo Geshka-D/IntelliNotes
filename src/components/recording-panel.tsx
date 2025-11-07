@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+ï»¿import { useCallback, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
@@ -30,16 +30,16 @@ export function RecordingPanel({ onNoteCreated }: RecordingPanelProps) {
       setAudioLevel(0);
     }
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      if (interval) clearInterval(interval);
     };
   }, [isRecording]);
 
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return ${mins.toString().padStart(2, "0")}:;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   }, []);
 
   const handleStartRecording = async () => {
@@ -64,7 +64,7 @@ export function RecordingPanel({ onNoteCreated }: RecordingPanelProps) {
         toast.error("Recording did not produce a file");
         return;
       }
-      const title = Recording ;
+      const title = `Recording ${new Date().toLocaleString()}`;
       const note = await createNoteFromRecording(response.filename, title);
       onNoteCreated(note);
     } catch (err) {
@@ -79,13 +79,13 @@ export function RecordingPanel({ onNoteCreated }: RecordingPanelProps) {
   return (
     <Card className="p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <div className={p-3 rounded-full }>
-          <Mic className={w-6 h-6 } />
+        <div className={`p-3 rounded-full ${isRecording ? "bg-red-100" : "bg-gray-100"}`}>
+          <Mic className={`w-6 h-6 ${isRecording ? "text-red-600" : "text-gray-600"}`} />
         </div>
         <div>
           <h3 className="font-semibold">Record lecture</h3>
           <p className="text-sm text-gray-500">
-            {isRecording ? "Capturing system audio…" : "Start recording loopback audio."}
+            {isRecording ? "Capturing system audioâ€¦" : "Start recording loopback audio."}
           </p>
           {deviceName && <p className="text-sm text-gray-400">Device: {deviceName}</p>}
         </div>
@@ -129,7 +129,7 @@ export function RecordingPanel({ onNoteCreated }: RecordingPanelProps) {
       {isProcessing && (
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Loader2 className="w-4 h-4 animate-spin" />
-          Processing transcription…
+          Processing transcriptionâ€¦
         </div>
       )}
     </Card>
