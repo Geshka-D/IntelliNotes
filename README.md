@@ -29,6 +29,14 @@ npm run dev
 
 The dev server runs on http://localhost:5173 and proxies requests to the backend. Build for production with 
 pm run build.
+### Start
+
+Одной строкой
+  - cmd /c "npm install && npm run build && venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000"
+Если хотите dev-режим (автообновление на 3000)
+  - В одном окне: venv\Scripts\python.exe -m uvicorn backend.main:app --reload
+  - В другом: npm run dev
+Открывайте: http://localhost:3000
 
 ## Key features
 
